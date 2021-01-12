@@ -1,0 +1,9 @@
+# VS Code files
+.vscode/*
+
+# Cash files
+__pycache__/*
+tralhoto/__pycache__/*
+
+# Other files
+test.py
