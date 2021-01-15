@@ -37,7 +37,7 @@ class WaitBefore(WakeUpBehaviour):
             The number of times that this bus will trip.
         '''
 
-        super().__init__(agent, time)
+        super().__init__(agent, time * config.SECONDS)
         self.n_simulations = n_simulations
 
 
