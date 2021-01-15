@@ -153,12 +153,12 @@ stations = [
     },
 ]
 
-''' Traffic light groups:
+''' Semaphore groups:
     - 0: Cruzamento movimentado
     - 1: Cruzamento comum
     - 2: Travessia de pedestres
 '''
-traffic_lights = [
+semaphores = [
     {'perimeter': 'Supermercado Armazém',
     'location': 0.2,
     'group': 2,
@@ -309,5 +309,5 @@ traffic_lights = [
     },
 ]
 
-print(len(traffic_lights))
-print(len(stations))
+#print(len(traffic_lights))
+#print(len(stations))

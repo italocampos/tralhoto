@@ -9,6 +9,7 @@ can be in three states, represented by colors: RED, AMBER and GREEN.
 '''
 
 from pade.misc.thread import SharedResource
+from tralhoto import config
 import time
 
 
@@ -98,5 +99,5 @@ class Board(object):
         finally puts the color of the Board to RED. '''
 
         self.color = 'AMBER'
-        time.sleep(self._security_time)
+        time.sleep(self._security_time * config.SECONDS)
         self.color = 'RED'
