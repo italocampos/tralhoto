@@ -35,18 +35,18 @@ for i, station in enumerate(data.stations):
 agents.extend([
 	Bus(aid = 'bus-0',
 		road = road,
-		name = 'Maracacuera - São Brás',
+		name = '000 Maracacuera São Brás',
 		velocity = config.BUS_VELOCITY[0],
-		n_simulations = 1,
-		start_time = 4,
+		n_simulations = 5,
+		start_time = 10,
 	),
-	#Bus(aid = 'bus-1',
-	#	road = road,
-	#	name = '801 - Testing Bus',
-	#	velocity = config.BUS_VELOCITY[1],
-	#	n_simulations = 1,
-	#	start_time = 30,
-	#),
+	Bus(aid = 'bus-1',
+		road = road,
+		name = '001 Maracacuera São Brás',
+		velocity = config.BUS_VELOCITY[1],
+		n_simulations = 5,
+		start_time = 5 *60, # Starts 5 min after bus-0
+	),
 ])
 
 if __name__ == '__main__':
