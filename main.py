@@ -35,7 +35,7 @@ for i, station in enumerate(data.stations):
 agents.extend([
 	Bus(aid = 'bus-0',
 		road = road,
-		name = '800 - Testing Bus',
+		name = 'Maracacuera - São Brás',
 		velocity = config.BUS_VELOCITY[0],
 		n_simulations = 1,
 		start_time = 4,

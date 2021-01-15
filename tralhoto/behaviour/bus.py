@@ -109,7 +109,7 @@ class Run(TickerBehaviour):
             # Checks if the bus finished its trip
             if self.agent.side == 'B' and self.agent.location == 0:
                 display(self.agent, color.green('FINISHED > ', 'bold') + 'Trip time: %.1f s' % self.agent.trip_time)
-                with open('logs/%s.log' % self.agent.aid.getLocalName(), 'w') as log:
+                with open('logs/%s.log' % self.agent.aid.getLocalName(), 'a') as log:
                     log.write('{bus_name}, {velocity}, {tt}, {bs}, {sem}\n'.format(
                         bus_name = self.agent.name,
                         velocity = self.agent.velocity,
@@ -117,14 +117,16 @@ class Run(TickerBehaviour):
                         bs = self.agent.burned_stations,
                         sem = self.agent.n_semaphores,
                         ))
+                # Restart the counters
                 self.agent.burned_stations = 0
                 self.agent.trip_time = 0
                 self.agent.n_semaphores = 0
+                # Increments the simulation number
+                self.simulation += 1
                 if self.simulation >= self.n_simulations:
                     display(self.agent, color.magenta('SIMULATION FINISHED > ', 'bold') + 'Check the file logs/%s.log' % self.agent.aid.getLocalName())
                     self._done = True
                 else:
-                    self.simulation += 1
                     time.sleep(5)
     
 

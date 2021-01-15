@@ -67,4 +67,4 @@ TIME_PER_PASSENGER = 3.0
 SECONDS = 0.2
 
 # Defining the speeds of the buses (std 35, 40)
-BUS_VELOCITY = [50, 45]
+BUS_VELOCITY = [40, 45]
