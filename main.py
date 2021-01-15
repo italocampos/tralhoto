@@ -45,7 +45,7 @@ agents.extend([
 		name = '001 Maracacuera São Brás',
 		velocity = config.BUS_VELOCITY[1],
 		n_simulations = 5,
-		start_time = 5 *60, # Starts 5 min after bus-0
+		start_time = 5 * 60, # Starts 5 min after bus-0
 	),
 ])
 
