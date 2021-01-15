@@ -28,7 +28,7 @@ class Board(object):
         RED.
     '''
 
-    def __init__(self, color = 'RED', security_time = 6.0):
+    def __init__(self, color = 'RED', security_time = 5.0):
         '''
         Parameters
         ----------
