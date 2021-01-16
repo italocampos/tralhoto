@@ -43,19 +43,19 @@ according with the problem modeling.
 '''
 
 def normal():
-    return stats.uniform.rvs(size = 50, loc = 9, scale = 2)
+    return stats.uniform.rvs(size = 50, loc = 9, scale = 3)
 
 def peak():
-    return stats.norm.rvs(size = 50, loc = 27, scale = 2)
+    return stats.norm.rvs(size = 50, loc = 27, scale = 3)
 
 
 # Defines the max opening time for each semaphore group (in seconds). The
 # indexes of this list maps the groups of the semaphores.
-SEMAPHORE_MAX_OPENING_TIME = [30, 45, 90]
+SEMAPHORE_MAX_OPENING_TIME = [30, 50, 90]
 
 # Defines the minimum closing time for each semaphore group (in seconds). The
 # indexes of this list maps the group of the semaphores.
-SEMAPHORE_MIN_CLOSING_TIME = [60, 45, 30]
+SEMAPHORE_MIN_CLOSING_TIME = [90, 50, 30]
 
 # Defines the type of scenario in the simulation
 scenario = normal
@@ -64,7 +64,7 @@ scenario = normal
 TIME_PER_PASSENGER = 3.0
 
 # The value of the seconds in the simulation
-SECONDS = 0.2
+SECOND = 0.2
 
 # Defining the speeds of the buses (std 35, 40)
-BUS_VELOCITY = [40, 50]
+BUS_VELOCITY = [40, 45, 50, 55, 60]

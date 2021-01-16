@@ -8,17 +8,15 @@ tructure of the agents and their first actions after instantiated.
 @author: @italocampos
 '''
 
-from pade.acl.aid import AID
 from pade.core.agent import Agent
-from pade.misc.utility import display
-from pade.misc.thread import SharedResource
 
 from tralhoto.board import Board
 from tralhoto import config
 from tralhoto.behaviour.bus import WaitBefore
 from tralhoto.behaviour.station import BusListener
+from tralhoto.behaviour.semaphore import BoardManager, OpeningRequestsListener, ConfirmationsListener
 
-import color, random, scipy
+import random, threading
 
 
 class Semaphore(Agent):
@@ -47,6 +45,11 @@ class Semaphore(Agent):
         define the area to start the communication with the buses. Default = 2.
     perimeter : str
         Describes the perimeter correspondent to this semaphore.
+    requests : int
+        The number of non-attended opening requests for this semaphores.
+    new_request : threading.Event
+        An event object that sinalizes when a new request arrives for this
+        Semaphore.
     MAX_OPENING_TIME : float
         The max time that this semaphore can remain open for the BRT bus
         before closes.
@@ -54,7 +57,7 @@ class Semaphore(Agent):
         The minimum time that this semaphore must wait before open again.
     '''
 
-    def __init__(self, aid, group, location, road, proximity_factor = 2, perimeter = None):
+    def __init__(self, aid, group, location, road, proximity_factor = 3, perimeter = None):
         '''
         Parameters
         ----------
@@ -75,12 +78,14 @@ class Semaphore(Agent):
             Describes the perimeter correspondent to this semaphore.
         '''
 
-        super().__init(aid)
+        super().__init__(aid)
         self.group = group
         self.location = location
         self.road = road
         self.proximity_factor = proximity_factor
         self.perimeter = perimeter
+        self.requests = 0
+        self.new_request = threading.Event()
 
         # Setting the opening and closing times according with the config file
         self.MAX_OPENING_TIME = config.SEMAPHORE_MAX_OPENING_TIME[group]
@@ -104,6 +109,11 @@ class Semaphore(Agent):
 
         # Sets the location of the Board of this semaphore
         self.road[self.location][1] = Board()
+
+        # Initiates listener behaviours
+        self.add_behaviour(BoardManager(self))
+        self.add_behaviour(ConfirmationsListener(self))
+        self.add_behaviour(OpeningRequestsListener(self))
     
 
     @property
@@ -159,7 +169,7 @@ class Station(Agent):
         The data of passengers flow between stations and buses.
     '''
 
-    def __init__(self, aid, group, location, road, side = None, proximity_factor = 2, name = None):
+    def __init__(self, aid, group, location, road, side = None, proximity_factor = 5, name = None):
         '''
         aid : pade.core.aid.AID
             The AID of this agent
@@ -250,6 +260,9 @@ class Bus(Agent):
         The location if this Station in the global road.
     side : str ('A' or 'B')
         The current side of the road that this Bus is traveling.
+    semaphore_fifo : list
+        A list that implements a FIFO behaviour to store the addresses of the
+        semaphores that were messaged.
     next_station : dict
         Stores data about the next station to stop.
     n_semaphores : int
@@ -258,6 +271,8 @@ class Bus(Agent):
         The total number of station that this bus burned out.
     trip_time : float
         The total time (in seconds) of the trip.
+    semaphore_time : float
+        The time spent by this Bus in closed semaphores.
     start_time : float, optional
         The time when this bus will start to run. Default = 10.
     n_simulations : int, optional
@@ -297,10 +312,11 @@ class Bus(Agent):
             'wait_time': 0,
             'name': None
         }
-        #self.next_semaphore = {}
+        self.semaphore_fifo = list()
+        self.semaphore_time = 0.0
+        self.trip_time = 0.0
         self.n_semaphores = 0
         self.burned_stations = 0
-        self.trip_time = 0.0
         self._residual = 0.0
 
 

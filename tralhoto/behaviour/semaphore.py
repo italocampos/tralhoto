@@ -7,43 +7,24 @@ This module contains the behaviours of the Semaphore agents.
 @author: @italocampos
 '''
 
-from pade.behaviours.types import CyclicBehaviour, OneShotBehaviour
+from pade.behaviours.types import CyclicBehaviour
 from pade.acl.messages import ACLMessage
 from pade.acl.filters import Filter
 from pade.misc.utility import display
 
 from tralhoto import config
 
-import color
-
-
-class RequestsSniffer(OneShotBehaviour):
-    ''' Sniffs for requests don't attended by this Semaphore.
-
-    This behaviour is called by BoardManager behaviour when there is no
-    requests to attend. When some request appears, this behaviour returns back
-    the control to BoardManager.
-    '''
-
-    def action(self):
-        if self.agent.requests != 0:
-            self.set_return(None)
-
-
 
 class BoardManager(CyclicBehaviour):
     ''' This behaviour manages the opening and closing of the board of this
     Semaphore.
 
-    This behaviour calls for a RequestsSniffer behaviour when there is no
-    requests to attend. This behaviour get back the control when the
-    RequestsSniffer detect a new request.
+    This behaviour is activated every time that the self.requests counter is
+    greater than zero.
     '''
 
     def action(self):
-        sniffer = RequestsSniffer(self.agent)
-        self.agent.add_behaviour(sniffer)
-        self.wait_return(sniffer)
+        self.agent.new_request.wait()
         self.open_board()
     
 
@@ -55,7 +36,7 @@ class BoardManager(CyclicBehaviour):
         # Closes the board
         self.agent.board.close()
         # Waits for the minimum closing time
-        self.wait(config.SEMAPHORE_MIN_CLOSING_TIME[self.agent.group] * config.SECONDS)
+        self.wait(self.agent.MIN_CLOSING_TIME * config.SECOND)
     
 
     def open_board(self):
@@ -69,13 +50,13 @@ class BoardManager(CyclicBehaviour):
         # Opens the board
         self.agent.board.open()
         # Waits for the max opening time set in config file
-        for _ in range(config.SEMAPHORE_MAX_OPENING_TIME):
+        for _ in range(self.agent.MAX_OPENING_TIME):
             # Check every second if all the requests were attended
             if self.agent.requests == 0:
                 break
-            self.wait(config.SECONDS)
+            self.wait(config.SECOND)
         
-        self.close_board()      
+        self.close_board()
 
 
 
@@ -90,6 +71,8 @@ class OpeningRequestsListener(CyclicBehaviour):
         filter.set_ontology('OPEN')
         filter.set_performative(ACLMessage.REQUEST)
         if filter.filter(message):
+            if self.agent.requests == 0:
+                self.agent.new_request.set()
             self.agent.requests += 1
 
 
@@ -108,3 +91,5 @@ class ConfirmationsListener(CyclicBehaviour):
         filter.set_performative(ACLMessage.INFORM)
         if filter.filter(message):
             self.agent.requests -= 1
+            if self.agent.requests == 0:
+                self.agent.new_request.clear()

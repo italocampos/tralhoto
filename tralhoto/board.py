@@ -10,7 +10,7 @@ can be in three states, represented by colors: RED, AMBER and GREEN.
 
 from pade.misc.thread import SharedResource
 from tralhoto import config
-import time
+import time, color
 
 
 class Board(object):
@@ -92,12 +92,18 @@ class Board(object):
         ''' Sets the color of the Board to GREEN. '''
 
         self.color = 'GREEN'
-    
+        #output = color.style('BOARD ({}) > %s'.format(id(self)), 'b')
+        #print(output % color.green('O', 'b'))
+
 
     def close(self):
         ''' Sets the color of the Board to AMBER, waits the security time, and
         finally puts the color of the Board to RED. '''
 
         self.color = 'AMBER'
-        time.sleep(self._security_time * config.SECONDS)
+        # output = color.style('BOARD ({}) > %s'.format(id(self)), 'b')
+        # print(output % color.yellow('O', 'b'))
+        time.sleep(self._security_time * config.SECOND)
         self.color = 'RED'
+        # output = color.style('BOARD ({}) > %s'.format(id(self)), 'b')
+        # print(output % color.red('O',  'b'))

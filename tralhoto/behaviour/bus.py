@@ -9,13 +9,12 @@ This module contains the behaviours of the Bus agents.
 
 from pade.behaviours.types import TickerBehaviour, OneShotBehaviour, WakeUpBehaviour
 from pade.acl.messages import ACLMessage
-from pade.acl.filters import Filter
 from pade.misc.utility import display
 
 from tralhoto.protocol import Request
 from tralhoto import config
 
-import pickle, time, color
+import pickle, color
 
 
 class WaitBefore(WakeUpBehaviour):
@@ -37,12 +36,12 @@ class WaitBefore(WakeUpBehaviour):
             The number of times that this bus will trip.
         '''
 
-        super().__init__(agent, time * config.SECONDS)
+        super().__init__(agent, time * config.SECOND)
         self.n_simulations = n_simulations
 
 
     def on_wake(self):
-        self.agent.add_behaviour(Run(self.agent, config.SECONDS, self.n_simulations))
+        self.agent.add_behaviour(Run(self.agent, config.SECOND, self.n_simulations))
 
 
 
@@ -88,7 +87,7 @@ class Run(TickerBehaviour):
             if index == self.agent.next_station['location']:
                 display(self.agent, color.yellow('STOP > ', 'bold') + self.agent.next_station['name'] + ' | %.1f s' % self.agent.next_station['wait_time'])
                 self.agent.trip_time += self.agent.next_station['wait_time']
-                time.sleep(self.agent.next_station['wait_time'] * config.SECONDS)
+                self.wait(self.agent.next_station['wait_time'] * config.SECOND)
 
             # Send messages for any compatible agents in this point
             for address in self.agent.road[index][0]:
@@ -100,34 +99,51 @@ class Run(TickerBehaviour):
 
                 # If there is a semaphore nearby
                 elif address['type'] == 'semaphore' and address['side'] == self.agent.side:
-                    pass
+                    # > Send a message for the nearby semaphore
+                    self.agent.add_behaviour(MessageSemaphore(self.agent, address['aid']))
+                    self.agent.semaphore_fifo.append(address['aid'])
 
             # Look at the Board of the semaphore
-            if self.agent.road[index][1] != None:
-                pass
+            board = self.agent.road[index][1]
+            if board != None:
+                if not board.is_opened():
+                    display(self.agent, color.red('STOPED > ', 'bold') + 'Semaphore in #%d' % self.agent.location)
+                    self.agent.n_semaphores += 1
+                    while not board.is_opened():
+                        self.agent.trip_time += 1
+                        self.agent.semaphore_time += 1
+                        self.wait(config.SECOND)
+                self.agent.add_behaviour(ConfirmSemaphore(self.agent, self.agent.semaphore_fifo.pop(0)))
+                #   QUE TAL COLOCAR O ENVIO DA CONFIRMAÇÃO EM UM OUTRO BEHAVIOUR ACIONADO
+                # JUNTO COM O DE SOLICITAÇÃO DE ABERTURA. ESSE COMPORTAMENTO VAI MONITORAR A
+                # POSIÇÃO DO BONDE E ENVIAR A MENSAGEM QUANDO PASSAR NA LOCALIZAÇÃO  DO SEMÁFORO (ONDE É?)
             
             # Checks if the bus finished its trip
             if self.agent.side == 'B' and self.agent.location == 0:
                 display(self.agent, color.green('FINISHED > ', 'bold') + 'Trip time: %.1f s' % self.agent.trip_time)
-                with open('logs/%s.log' % self.agent.aid.getLocalName(), 'a') as log:
-                    log.write('{bus_name}, {velocity}, {tt}, {bs}, {sem}\n'.format(
+                with open('%s.csv' % self.agent.aid.getLocalName(), 'a') as log:
+                #with open('logs/buses.csv', 'a') as log:
+                    log.write('{bus_name}, {velocity}, {tt}, {bs}, {sem_n}, {sem_t}\n'.format(
                         bus_name = self.agent.name,
                         velocity = self.agent.velocity,
                         tt = self.agent.trip_time,
                         bs = self.agent.burned_stations,
-                        sem = self.agent.n_semaphores,
+                        sem_n = self.agent.n_semaphores,
+                        sem_t = self.agent.semaphore_time,
                         ))
                 # Restart the counters
                 self.agent.burned_stations = 0
                 self.agent.trip_time = 0
                 self.agent.n_semaphores = 0
+                self.agent.semaphore_time = 0
                 # Increments the simulation number
                 self.simulation += 1
                 if self.simulation >= self.n_simulations:
-                    display(self.agent, color.magenta('SIMULATION FINISHED > ', 'bold') + 'Check the file logs/%s.log' % self.agent.aid.getLocalName())
+                    display(self.agent, color.magenta('SIMULATION FINISHED > ', 'bold') + 'Check the file logs/%s.csv' % self.agent.aid.getLocalName())
                     self._done = True
                 else:
-                    time.sleep(5)
+                    # Aguarda 10 min antes de começar a viagem novamente.
+                    self.wait(10 * config.SECOND)
     
 
     def done(self):
@@ -153,7 +169,7 @@ class MessageStation(OneShotBehaviour):
         agent : tralhoto.agent.Bus
             The Bus agent that holds this behaviour.
         station : pade.core.aid.AID
-            The AID of the station to be messaged.
+            The AID of the Station to be messaged.
         '''
 
         super().__init__(agent)
@@ -194,3 +210,66 @@ class MessageStation(OneShotBehaviour):
             self.agent.next_station['location'] = None
             self.agent.next_station['name'] = None
         
+
+
+class MessageSemaphore(OneShotBehaviour):
+    ''' Message the Semaphore when inside de contact area.
+
+    Properties
+    ----------
+    semaphore : pade.core.aid.AID
+        The AID of the semaphore to be messaged.
+    '''
+
+    def __init__(self, agent, semaphore):
+        '''
+        Parameters
+        ----------
+        agent : tralhoto.agent.Bus
+            The Bus agent that holds this behaviour.
+        semaphore : pade.core.aid.AID
+            The AID of the Semaphore to be messaged.
+        '''
+
+        super().__init__(agent)
+        self.semaphore = semaphore
+
+
+    def action(self):
+        # > Creates and sends the message to send
+        message = ACLMessage(ACLMessage.REQUEST)
+        message.set_ontology('OPEN')
+        message.add_receiver(self.semaphore)
+        self.send(message)
+
+
+
+class ConfirmSemaphore(OneShotBehaviour):
+    ''' Message a Semaphore after passed by this.
+
+    Properties
+    ----------
+    semaphore : pade.core.aid.AID
+        The AID of the Semaphore to be messaged.
+    '''
+
+    def __init__(self, agent, semaphore):
+        '''
+        Parameters
+        ----------
+        agent : tralhoto.agent.Bus
+            The Bus agent that holds this behaviour.
+        semaphore : pade.core.aid.AID
+            The AID of the Semaphore to be messaged.
+        '''
+
+        super().__init__(agent)
+        self.semaphore = semaphore
+
+
+    def action(self):
+        # > Creates and sends the message to send
+        message = ACLMessage(ACLMessage.INFORM)
+        message.set_ontology('CONFIRMATION')
+        message.add_receiver(self.semaphore)
+        self.send(message)
