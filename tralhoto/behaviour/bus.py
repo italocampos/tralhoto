@@ -107,7 +107,7 @@ class Run(TickerBehaviour):
             board = self.agent.road[index][1]
             if board != None:
                 if not board.is_opened():
-                    display(self.agent, color.red('STOPED > ', 'bold') + 'Semaphore in #%d' % self.agent.location)
+                    display(self.agent, color.red('STOP > ', 'bold') + 'Semaphore in #%d' % self.agent.location)
                     self.agent.n_semaphores += 1
                     while not board.is_opened():
                         self.agent.trip_time += 1
