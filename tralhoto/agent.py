@@ -14,7 +14,10 @@ from tralhoto.board import Board
 from tralhoto import config
 from tralhoto.behaviour.bus import WaitBefore
 from tralhoto.behaviour.station import BusListener
-from tralhoto.behaviour.semaphore import BoardManager, OpeningRequestsListener, ConfirmationsListener
+from tralhoto.behaviour.semaphore import BoardManager
+from tralhoto.behaviour.semaphore import OpeningRequestsListener
+from tralhoto.behaviour.semaphore import ConfirmationsListener
+from tralhoto.behaviour.semaphore import TraditionalManager
 
 import random, threading
 
@@ -114,6 +117,9 @@ class Semaphore(Agent):
         self.add_behaviour(BoardManager(self))
         self.add_behaviour(ConfirmationsListener(self))
         self.add_behaviour(OpeningRequestsListener(self))
+
+        # Adds traditional behaviour
+        #self.add_behaviour(TraditionalManager(self))
     
 
     @property

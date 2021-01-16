@@ -93,3 +93,36 @@ class ConfirmationsListener(CyclicBehaviour):
             self.agent.requests -= 1
             if self.agent.requests == 0:
                 self.agent.new_request.clear()
+
+
+
+class TraditionalManager(CyclicBehaviour):
+    ''' This behaviour implements the traditional board management for the
+    Semaphores (for comparison).
+    '''
+
+    def action(self):
+        self.open_board()
+        self.close_board()
+    
+
+    def close_board(self):
+        ''' Closes the board and locks the behaviour during a minimum time, as
+        is described in the config file.
+        '''
+
+        # Closes the board
+        self.agent.board.close()
+        # Waits for the minimum closing time
+        self.wait(self.agent.MIN_CLOSING_TIME * config.SECOND)
+    
+
+    def open_board(self):
+        ''' Opens the board and locks the behaviour during a minimum time, as
+        is described in the config file.
+        '''
+
+        # Opens the board
+        self.agent.board.open()
+        # Waits the max time
+        self.wait(self.agent.MAX_OPENING_TIME * config.SECOND)
