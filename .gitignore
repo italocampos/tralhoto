@@ -11,3 +11,4 @@ test.py
 station.txt
 tasks
 results/*
+logs/*
