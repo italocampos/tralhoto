@@ -114,9 +114,6 @@ class Run(TickerBehaviour):
                         self.agent.semaphore_time += 1
                         self.wait(config.SECOND)
                 self.agent.add_behaviour(ConfirmSemaphore(self.agent, self.agent.semaphore_fifo.pop(0)))
-                #   QUE TAL COLOCAR O ENVIO DA CONFIRMAÇÃO EM UM OUTRO BEHAVIOUR ACIONADO
-                # JUNTO COM O DE SOLICITAÇÃO DE ABERTURA. ESSE COMPORTAMENTO VAI MONITORAR A
-                # POSIÇÃO DO BONDE E ENVIAR A MENSAGEM QUANDO PASSAR NA LOCALIZAÇÃO  DO SEMÁFORO (ONDE É?)
             
             # Checks if the bus finished its trip
             if self.agent.side == 'B' and self.agent.location == 0:
