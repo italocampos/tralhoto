@@ -13,10 +13,15 @@ import scipy.stats as stats
 ''' The semaphores can be of three types, according with the degree of traffic
     in their perimeters.
 
-    Group    Degree of traffic    
-    0        High
-    1        Normal
-    2        Low
+    Group    DOT     MOT    MCT
+    0        High    30     90
+    1        Normal  50     50
+    2        Low     90     90
+
+    * Subs:
+        - DOT: Degree of traffic
+        - MOT: Maximum opening time
+        - MCT: Minimum closing time
 
     Similarly, the stations can be of three types, according with their
     occupancy rate throughout the day.
