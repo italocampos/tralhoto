@@ -10,8 +10,8 @@ BRT bus system in the city of Belém-PA, Brazil.
 
 ## How it works?
 
-To understand how this system works, please, refer to the paper in this link (
-Brazilian Portuguese only).
+To understand how this system works, please, refer to the paper in [this link](https://github.com/italocampos/tralhoto/blob/main/docs/paper.pdf) 
+(Brazilian Portuguese only).
 
 
 ## Installation and dependencies
